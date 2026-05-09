@@ -382,11 +382,58 @@
     border-color: var(--gold);
   }
 
+  .order-form-wrap {
+    max-width: 560px;
+  }
+  .form-group {
+    margin-bottom: 1.8rem;
+  }
+  .form-label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+  }
+  .form-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(201,169,110,0.35);
+    color: var(--off-white);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    padding: 0.6rem 0;
+    outline: none;
+    transition: border-color 0.3s;
+    letter-spacing: 0.05em;
+  }
+  .form-input::placeholder { color: var(--mid); }
+  .form-input:focus { border-color: var(--gold); }
+
   .order-row {
     display: flex;
     align-items: center;
     gap: 2rem;
     flex-wrap: wrap;
+  }
+
+  .status-success {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid rgba(201,169,110,0.3);
+    padding: 1rem 1.5rem;
+  }
+  .status-error {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: #e07070;
+    border: 1px solid rgba(220,100,100,0.3);
+    padding: 1rem 1.5rem;
   }
 
   /* CONTACT */
@@ -594,19 +641,49 @@
 
 <!-- SIZES & ORDER -->
 <section class="sizes-section" id="order">
-  <p class="sizes-label">Оберіть розмір</p>
-  <div class="sizes-grid">
-    <button class="size-btn active" onclick="selectSize(this)">42-44 / S/M</button>
-    <button class="size-btn" onclick="selectSize(this)">46-48 / M/L</button>
-  </div>
-  <div class="order-row">
-    <a href="https://t.me/noirdress_bot" target="_blank" class="btn-primary">Написати та замовити</a>
-    <div class="price-block" style="margin-bottom:0;">
-      <span class="price-old">1 300 грн</span>
-      <span class="price-new">920 грн</span>
-      <span class="price-badge">−29%</span>
+  <p class="sizes-label">Оформити замовлення</p>
+
+  <div class="order-form-wrap">
+    <!-- Розмір -->
+    <div class="form-group">
+      <label class="form-label">Розмір</label>
+      <div class="sizes-grid" style="margin-bottom:0;">
+        <button class="size-btn active" onclick="selectSize(this)">42-44 / S/M</button>
+        <button class="size-btn" onclick="selectSize(this)">46-48 / M/L</button>
+      </div>
     </div>
-    <span style="font-size:0.7rem; letter-spacing:0.1em; color:var(--mid);">Доставка по всій Україні</span>
+
+    <!-- Ім'я -->
+    <div class="form-group">
+      <label class="form-label" for="f-name">Ім'я та прізвище</label>
+      <input class="form-input" id="f-name" type="text" placeholder="Наприклад: Олена Коваль">
+    </div>
+
+    <!-- Телефон -->
+    <div class="form-group">
+      <label class="form-label" for="f-phone">Номер телефону</label>
+      <input class="form-input" id="f-phone" type="tel" placeholder="+380 __  ___  __ __">
+    </div>
+
+    <!-- Адреса -->
+    <div class="form-group">
+      <label class="form-label" for="f-address">Адреса доставки</label>
+      <input class="form-input" id="f-address" type="text" placeholder="Місто, відділення Нової Пошти або адреса">
+    </div>
+
+    <!-- Ціна і кнопка -->
+    <div class="order-row" style="margin-top:2rem;">
+      <button class="btn-primary" id="submit-order" onclick="submitOrder()">Підтвердити замовлення</button>
+      <div class="price-block" style="margin-bottom:0;">
+        <span class="price-old">1 300 грн</span>
+        <span class="price-new">920 грн</span>
+        <span class="price-badge">−29%</span>
+      </div>
+    </div>
+    <p style="font-size:0.65rem; letter-spacing:0.1em; color:var(--mid); margin-top:1rem;">Доставка по всій Україні · Нова Пошта</p>
+
+    <!-- Статус -->
+    <div id="order-status" style="display:none; margin-top:1.5rem;"></div>
   </div>
 </section>
 
@@ -631,6 +708,55 @@
   function selectSize(el) {
     document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
+  }
+
+  async function submitOrder() {
+    const name    = document.getElementById('f-name').value.trim();
+    const phone   = document.getElementById('f-phone').value.trim();
+    const address = document.getElementById('f-address').value.trim();
+    const size    = document.querySelector('.size-btn.active')?.textContent.trim() || '—';
+    const statusEl = document.getElementById('order-status');
+    const btn = document.getElementById('submit-order');
+
+    if (!name || !phone || !address) {
+      statusEl.style.display = 'block';
+      statusEl.className = 'status-error';
+      statusEl.textContent = 'Будь ласка, заповніть усі поля';
+      return;
+    }
+
+    btn.textContent = 'Надсилання...';
+    btn.style.opacity = '0.6';
+    btn.disabled = true;
+
+    const text = `🛍 НОВЕ ЗАМОВЛЕННЯ\n\n👗 Товар: Чорна сукня NOIR\n📏 Розмір: ${size}\n👤 Ім'я: ${name}\n📞 Телефон: ${phone}\n📦 Адреса: ${address}\n💰 Сума: 920 грн`;
+
+    try {
+      const res = await fetch(`https://api.telegram.org/bot8762049567:AAHdKLz878JlwySWPOmJGFNC6VHgqZYxvUs/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: 706778814, text })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'status-success';
+        statusEl.textContent = '✦ Замовлення прийнято! Ми зв\'яжемось з вами найближчим часом';
+        document.getElementById('f-name').value = '';
+        document.getElementById('f-phone').value = '';
+        document.getElementById('f-address').value = '';
+        btn.textContent = 'Замовлення надіслано ✓';
+      } else {
+        throw new Error('Telegram error');
+      }
+    } catch(e) {
+      statusEl.style.display = 'block';
+      statusEl.className = 'status-error';
+      statusEl.textContent = 'Помилка надсилання. Напишіть нам напряму в Telegram: @noirdress_bot';
+      btn.textContent = 'Підтвердити замовлення';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }
   }
 
   const observer = new IntersectionObserver((entries) => {
