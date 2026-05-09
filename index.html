@@ -729,13 +729,13 @@
     btn.style.opacity = '0.6';
     btn.disabled = true;
 
-    const text = `🛍 НОВЕ ЗАМОВЛЕННЯ\n\n👗 Товар: Чорна сукня NOIR\n📏 Розмір: ${size}\n👤 Ім'я: ${name}\n📞 Телефон: ${phone}\n📦 Адреса: ${address}\n💰 Сума: 920 грн`;
+    const caption = `🛍 НОВЕ ЗАМОВЛЕННЯ\n\n👗 Товар: Чорна сукня NOIR\n🏷 Артикул: 077\n📏 Розмір: ${size}\n👤 Ім'я: ${name}\n📞 Телефон: ${phone}\n📦 Адреса: ${address}\n💰 Сума: 920 грн`;
 
     try {
-      const res = await fetch(`https://api.telegram.org/bot8762049567:AAHdKLz878JlwySWPOmJGFNC6VHgqZYxvUs/sendMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot8762049567:AAHdKLz878JlwySWPOmJGFNC6VHgqZYxvUs/sendPhoto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: 706778814, text })
+        body: JSON.stringify({ chat_id: 706778814, photo: 'https://i.ibb.co/zVQQrt8S/photo-2026-05-09-14-25-24.jpg', caption })
       });
       const data = await res.json();
       if (data.ok) {
